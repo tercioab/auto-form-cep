@@ -1,49 +1,71 @@
+import UseGetCepData from "@/hooks/GetCepData";
+import {
+	Box,
+	Button,
+	Flex,
+	FormControl,
+	FormErrorMessage,
+	Input,
+	Stack,
+} from "@chakra-ui/react";
 import axios from "axios";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useEffect } from "react";
+import { useForm, SubmitHandler, useWatch, FieldError } from "react-hook-form";
 
 type Inputs = {
 	cep: string;
 	logradouro: string;
-	complemento: "lado ímpar";
+	complemento: string;
 	bairro: string;
-  localidade: string;
-  cidade: string;
+	localidade: string;
+	cidade: string;
 };
 
 export default function App() {
+	const { getCepData, cepExist } = UseGetCepData();
 	const {
-		register,
+		control,
 		handleSubmit,
-		watch,
 		setValue,
+		register,
+		setError,
 		formState: { errors },
 	} = useForm<Inputs>();
-	const onSubmit: SubmitHandler<Inputs> = data => console.log(data);
+	const cep = useWatch({ control, name: "cep", defaultValue: "" });
 
-  async function GetCepData() {
-    const cep = watch('cep')
-		axios.get(`https://brasilaberto.com/api/v1/zipcode/${cep}`).then(resp => {
-			resp.data.result;
-			setValue("logradouro", resp.data.result.street);
-			setValue("complemento", resp.data.result.complement);
-			setValue("bairro", resp.data.result.district);
-      setValue("localidade", resp.data.result.state);
-      setValue("cidade", resp.data.result.city);
-		});
-	}
-	if (watch("cep")?.length === 8) {
-		GetCepData();
-	}
+	useEffect(() => {
+		const cepLengths = 8;
+		if (cep?.length === cepLengths) {
+			getCepData(cep, setValue);
+		}
+	}, [cep, setValue, getCepData]);
+
+	const onSubmit: SubmitHandler<Inputs> = data => {
+		if (!cepExist) {
+			setError(
+				"cep",
+				{ type: "focus", message: "digite um cep valido" },
+				{ shouldFocus: true },
+			);
+		} else {
+			console.log(data);
+		}
+	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)}>
-			<input {...register("cep")} />
-			<input {...register("logradouro")} />
-			<input {...register("complemento")} />
-			<input {...register("bairro")} />
-      <input {...register("localidade")} />
-      <input {...register("cidade")} />
-			<input type='submit' />
-		</form>
+		<Box w='full' display='flex' justifyItems='center' justifyContent='center'>
+			<Stack as='form' direction='column' onSubmit={handleSubmit(onSubmit)}>
+				<FormControl isInvalid={!!errors.cep}>
+				<Input {...register("cep")} placeholder='cep' />
+				<FormErrorMessage>{errors.cep && errors.cep.message}</FormErrorMessage>
+				</FormControl>
+				<Input {...register("logradouro")} placeholder='logradouro' />
+				<Input {...register("complemento")} placeholder='complemento' />
+				<Input {...register("bairro")} placeholder='bairro' />
+				<Input {...register("localidade")} placeholder='localidade' />
+				<Input {...register("cidade")} placeholder='cidade' />
+				<Button  type='submit'>ENVIAR</Button>
+			</Stack>
+		</Box>
 	);
 }

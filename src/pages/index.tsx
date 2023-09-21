@@ -2,15 +2,13 @@ import UseGetCepData from "@/hooks/GetCepData";
 import {
 	Box,
 	Button,
-	Flex,
 	FormControl,
 	FormErrorMessage,
 	Input,
-	Stack,
+	Stack
 } from "@chakra-ui/react";
-import axios from "axios";
 import { useEffect } from "react";
-import { useForm, SubmitHandler, useWatch, FieldError } from "react-hook-form";
+import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 
 type Inputs = {
 	cep: string;
@@ -29,7 +27,7 @@ export default function App() {
 		setValue,
 		register,
 		setError,
-		formState: { errors },
+		formState: { errors, isSubmitting },
 	} = useForm<Inputs>();
 	const cep = useWatch({ control, name: "cep", defaultValue: "" });
 
@@ -40,7 +38,7 @@ export default function App() {
 		}
 	}, [cep, setValue, getCepData]);
 
-	const onSubmit: SubmitHandler<Inputs> = data => {
+	const onSubmit: SubmitHandler<Inputs> = async (data) => {
 		if (!cepExist) {
 			setError(
 				"cep",
@@ -56,15 +54,17 @@ export default function App() {
 		<Box w='full' display='flex' justifyItems='center' justifyContent='center'>
 			<Stack as='form' direction='column' onSubmit={handleSubmit(onSubmit)}>
 				<FormControl isInvalid={!!errors.cep}>
-				<Input {...register("cep")} placeholder='cep' />
-				<FormErrorMessage>{errors.cep && errors.cep.message}</FormErrorMessage>
+					<Input {...register("cep")} placeholder='cep' />
+					<FormErrorMessage>{errors.cep && errors.cep.message}</FormErrorMessage>
 				</FormControl>
 				<Input {...register("logradouro")} placeholder='logradouro' />
 				<Input {...register("complemento")} placeholder='complemento' />
 				<Input {...register("bairro")} placeholder='bairro' />
 				<Input {...register("localidade")} placeholder='localidade' />
 				<Input {...register("cidade")} placeholder='cidade' />
-				<Button  type='submit'>ENVIAR</Button>
+				<Button isLoading={isSubmitting} type='submit'>
+					ENVIAR
+				</Button>
 			</Stack>
 		</Box>
 	);
